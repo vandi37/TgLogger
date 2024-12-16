@@ -11,7 +11,6 @@ It can:
 - Many token support
 - 36^25 different tokens 
 - (1/36)^25 chance of same tokens
-- !!! Not safe token storage
 
 ## Getting project
 
