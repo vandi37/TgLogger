@@ -19,6 +19,7 @@ const (
 	ErrorCheckingToken  = "error checking token"
 	TokenNotFound       = "token does not exist"
 	ErrorSendingMessage = "error sending message"
+	MethodNotAllowed    = "method not allowed"
 )
 
 // The handler
@@ -51,6 +52,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Not found
 		err := api.SendError(w, http.StatusNotFound, vanerrors.NewSimple(NotFound, fmt.Sprintf("the only allowed page is %s", h.mainPath)))
+		if err != nil {
+			h.logger.Errorln(err)
+		}
+
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		// Not found
+		err := api.SendError(w, http.StatusMethodNotAllowed, vanerrors.NewSimple(MethodNotAllowed, "allowed only method post"))
 		if err != nil {
 			h.logger.Errorln(err)
 		}
