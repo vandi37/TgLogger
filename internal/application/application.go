@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/vandi37/TgLogger/config"
+	"github.com/vandi37/TgLogger/internal/web/handler"
+	"github.com/vandi37/TgLogger/internal/web/server"
 	"github.com/vandi37/TgLogger/pkg/bot"
 	"github.com/vandi37/TgLogger/pkg/closer"
 	"github.com/vandi37/TgLogger/pkg/db"
@@ -62,6 +64,13 @@ func (a *Application) Run(ctx context.Context) {
 	}
 
 	go bot.Run(ctx)
+
+	handler := handler.New(bot, service, logger)
+
+	server := server.New(handler, cfg.Port)
+
+	go server.Run()
+	closer.Add(server.Close)
 
 	<-ctx.Done()
 

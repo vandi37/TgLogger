@@ -14,7 +14,7 @@ const (
 )
 
 // Reply sends a message to the chat, splitting the text if it's too long.
-func (b *Bot) Reply(chat int64, text string) error {
+func (b *Bot) Send(chat int64, text string) error {
 	// Check for valid text input
 	if text == "" {
 		return vanerrors.NewSimple(TextEmpty)
