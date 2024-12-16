@@ -70,17 +70,21 @@ func (b *Bot) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			return vanerrors.NewSimple(ContextExit)
 		case update := <-updates:
-			if update.Message == nil {
-				continue
-			}
-			if !update.Message.IsCommand() {
+			if update.Message == nil || !update.Message.IsCommand() {
 				continue
 			}
 
-			// err := b.rootHandler.Handel(update)
-			// if err != nil {
-			// 	b.logger.Warnln(err, update.Message.From.FirstName)
-			// }
+			err := b.service.NewUser(update.SentFrom().ID)
+			if err != nil {
+				b.logger.Errorln(err)
+				continue
+			}
+
+			err = b.commands.Run(update)
+			if err != nil {
+				b.logger.Errorln(err)
+				continue
+			}
 		}
 	}
 }
