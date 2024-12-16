@@ -153,3 +153,24 @@ func (db *DB) SelectTokens(id int64) ([]string, error) {
 
 	return tokens, err
 }
+
+func (db *DB) GetOwner(token string) (int64, error) {
+	query := `select user_id from tokens where token = $1`
+
+	rows, err := db.db.Query(query, token)
+	if err != nil {
+		return 0, vanerrors.NewWrap(ErrorSelecting, err, vanerrors.EmptyHandler)
+	}
+
+	defer rows.Close()
+
+	rows.Next()
+
+	var id int64
+	err = rows.Scan(&id)
+	if err != nil {
+		return 0, vanerrors.NewWrap(ErrorScanningRows, err, vanerrors.EmptyHandler)
+	}
+
+	return id, nil
+}

@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/vandi37/TgLogger/config"
+	"github.com/vandi37/TgLogger/pkg/bot"
 	"github.com/vandi37/TgLogger/pkg/closer"
 	"github.com/vandi37/TgLogger/pkg/db"
 	"github.com/vandi37/TgLogger/pkg/logger"
+	"github.com/vandi37/TgLogger/pkg/service"
 )
 
 // Thr application program
@@ -51,6 +53,15 @@ func (a *Application) Run(ctx context.Context) {
 	if err != nil {
 		logger.Fatalln(err)
 	}
+
+	service := service.New(db, logger)
+
+	bot, err := bot.New(cfg.Token, service, logger)
+	if err != nil {
+		logger.Fatalln(err)
+	}
+
+	go bot.Run(ctx)
 
 	<-ctx.Done()
 
