@@ -39,13 +39,13 @@ func New(cfg config.DBConfig) (*DB, error) {
 func (db *DB) Init() error {
 
 	query := `
-CREATE TABLE users (
+CREATE TABLE  IF NOT EXISTS users (
     id BIGINT NOT NULL,
     created TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE tokens (
+CREATE TABLE IF NOT EXISTS tokens  (
     token CHAR(25) PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP

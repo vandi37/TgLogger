@@ -35,6 +35,7 @@ func New(bot *bot.Bot, service *service.Service, logger *logger.Logger) *Handler
 	handler := Handler{
 		service:  service,
 		mainPath: "/send",
+		bot:      bot,
 	}
 
 	return &handler

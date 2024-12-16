@@ -21,7 +21,7 @@ type Command func(u *tgbotapi.Update) error
 
 // The telegram bot
 type Bot struct {
-	*tgbotapi.BotAPI
+	Bot      *tgbotapi.BotAPI
 	logger   *logger.Logger
 	mu       sync.Mutex
 	upd      tgbotapi.UpdateConfig
@@ -42,7 +42,7 @@ func New(token string, service *service.Service, logger *logger.Logger) (*Bot, e
 	u := tgbotapi.NewUpdate(60)
 
 	res := Bot{
-		BotAPI:  bot,
+		Bot:     bot,
 		logger:  logger,
 		upd:     u,
 		service: service,
@@ -62,7 +62,7 @@ func (b *Bot) Run(ctx context.Context) error {
 	defer b.mu.Unlock()
 
 	// Gets updates
-	updates := b.GetUpdatesChan(b.upd)
+	updates := b.Bot.GetUpdatesChan(b.upd)
 	updates.Clear()
 
 	for {

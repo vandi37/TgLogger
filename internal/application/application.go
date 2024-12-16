@@ -36,7 +36,6 @@ func (a *Application) Run(ctx context.Context) {
 	if err != nil {
 		logger.Fatalln(err)
 	}
-	logger.Println("got config")
 
 	// The program
 
@@ -71,6 +70,8 @@ func (a *Application) Run(ctx context.Context) {
 
 	go server.Run()
 	closer.Add(server.Close)
+
+	logger.Println("application started")
 
 	<-ctx.Done()
 

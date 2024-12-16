@@ -44,7 +44,7 @@ func (b *Bot) Send(chat int64, text string) error {
 			msg.DisableWebPagePreview = true
 
 			// Sends the message
-			_, err := b.BotAPI.Send(msg)
+			_, err := b.Bot.Send(msg)
 			if err != nil {
 				return vanerrors.NewWrap(ErrorSending, err, vanerrors.EmptyHandler)
 			}
