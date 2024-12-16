@@ -31,6 +31,9 @@ func (b *Bot) MyTokens(u tgbotapi.Update) error {
 	if err != nil {
 		return b.Send(id, fmt.Sprintf("❌ Error getting tokens: %v", err))
 	}
+	if len(tokens) <= 0 {
+		return b.Send(id, "❌ You don't have any tokens")
+	}
 	var mes string = "✅ Your tokens:"
 	for i, t := range tokens {
 		mes += fmt.Sprintf("\n%d: `%s`", i+1, t)
