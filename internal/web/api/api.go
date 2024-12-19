@@ -23,7 +23,6 @@ type Request struct {
 // Sends the response
 func (r Response) Send(w http.ResponseWriter) error {
 	return json.NewEncoder(w).Encode(r)
-
 }
 
 // Sends an error

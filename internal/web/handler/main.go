@@ -1,13 +1,12 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/vandi37/TgLogger/internal/web/api"
 	"github.com/vandi37/TgLogger/pkg/bot"
 	"github.com/vandi37/TgLogger/pkg/logger"
+	"github.com/vandi37/TgLogger/pkg/maps"
 	"github.com/vandi37/TgLogger/pkg/service"
 	"github.com/vandi37/vanerrors"
 )
@@ -26,7 +25,8 @@ const (
 type Handler struct {
 	logger   *logger.Logger
 	service  *service.Service
-	mainPath string
+	funcs    map[string]http.HandlerFunc
+	handlers map[string]http.Handler
 	bot      *bot.Bot
 }
 
@@ -34,9 +34,14 @@ type Handler struct {
 func New(bot *bot.Bot, service *service.Service, logger *logger.Logger) *Handler {
 	// Creating handler
 	handler := Handler{
-		service:  service,
-		mainPath: "/send",
-		bot:      bot,
+		service: service,
+		bot:     bot,
+	}
+	handler.funcs = map[string]http.HandlerFunc{
+		"/api/send": CheckMethod(http.MethodPost, handler.Send, logger),
+	}
+	handler.handlers = map[string]http.Handler{
+		"/api/check": newSendHandler(service, logger),
 	}
 
 	return &handler
@@ -44,76 +49,24 @@ func New(bot *bot.Bot, service *service.Service, logger *logger.Logger) *Handler
 
 // Serve
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// The header
 	w.Header().Add("Content-Type", "application/json")
 
-	// Gets the handler func
-	if r.URL.Path != h.mainPath {
-
-		// Not found
-		err := api.SendError(w, http.StatusNotFound, vanerrors.NewSimple(NotFound, fmt.Sprintf("the only allowed page is %s", h.mainPath)))
-		if err != nil {
-			h.logger.Errorln(err)
-		}
-
+	fn, ok := h.funcs[r.URL.Path]
+	if ok && fn != nil {
+		fn(w, r)
 		return
 	}
 
-	if r.Method != http.MethodPost {
-		// Not found
-		err := api.SendError(w, http.StatusMethodNotAllowed, vanerrors.NewSimple(MethodNotAllowed, "allowed only method post"))
-		if err != nil {
-			h.logger.Errorln(err)
-		}
-
+	hand, ok := maps.Find(h.handlers, r.URL.Path, "/")
+	if ok && hand != nil {
+		hand.ServeHTTP(w, r)
 		return
 	}
 
-	// Runs the handler
-	defer r.Body.Close()
-
-	var req api.Request
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		err = api.SendError(w, http.StatusBadRequest, vanerrors.NewWrap(InvalidRequest, err, vanerrors.EmptyHandler))
-		if err != nil {
-			h.logger.Errorln(err)
-
-		}
-		return
-	}
-
-	ok, err := h.service.CheckToken(req.Token)
-	if err != nil {
-		err = api.SendError(w, http.StatusInternalServerError, vanerrors.NewWrap(ErrorCheckingToken, err, vanerrors.EmptyHandler))
-		if err != nil {
-			h.logger.Errorln(err)
-
-		}
-		return
-	}
-
-	if !ok {
-		err = api.SendError(w, http.StatusBadRequest, vanerrors.NewSimple(TokenNotFound))
-		if err != nil {
-			h.logger.Errorln(err)
-
-		}
-		return
-	}
-
-	err = h.bot.Send(req.Id, req.Text)
-	if err != nil {
-		err = api.SendError(w, http.StatusInternalServerError, vanerrors.NewWrap(ErrorSendingMessage, err, vanerrors.EmptyHandler))
-		if err != nil {
-			h.logger.Errorln(err)
-
-		}
-		return
-	}
-	err = api.Send(w, fmt.Sprintf("successful sending message '%s' to chat %d", req.Text, req.Id))
+	err := api.SendError(w, http.StatusNotFound, vanerrors.NewSimple(NotFound))
 	if err != nil {
 		h.logger.Errorln(err)
-
+		return
 	}
+
 }
