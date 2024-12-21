@@ -12,6 +12,12 @@ import (
 	"github.com/vandi37/vanerrors"
 )
 
+const (
+	OkSend          = "successful sending message '%s' to chat %d"
+	OkSendWithToken = OkSend + " from token %s"
+	OkCheck         = "successful token checking, token %s exists"
+)
+
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -39,7 +45,8 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.Send(w, fmt.Sprintf("successful sending message '%s' to chat %d", req.Text, req.Id))
+	h.logger.Printf(OkSendWithToken, req.Text, req.Id, req.Token)
+	err = api.Send(w, fmt.Sprintf(OkSend, req.Text, req.Id))
 	if err != nil {
 		h.logger.Errorln(err)
 	}
@@ -66,30 +73,22 @@ func CheckToken(w http.ResponseWriter, token string, service *service.Service, l
 	return true
 }
 
-type sendHandler struct {
-	logger  *logger.Logger
-	service *service.Service
+func (h *Handler) CheckHandler(w http.ResponseWriter, r *http.Request) {
+	var path = strings.Split(r.URL.Path, "/")
+	if CheckToken(w, path[len(path)-1], h.service, h.logger) {
+
+		h.logger.Printf(OkCheck, path[len(path)-1])
+
+		err := api.Send(w, "token exists")
+		if err != nil {
+			h.logger.Errorln(err)
+		}
+	}
 }
 
-func newSendHandler(service *service.Service, logger *logger.Logger) *sendHandler {
-	return &sendHandler{logger, service}
-}
-
-func (h *sendHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	CheckMethod(http.MethodGet, func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasPrefix(r.URL.Path, "/api/check/") {
-			err := api.SendError(w, http.StatusBadRequest, vanerrors.NewSimple(TokenNotFound))
-			if err != nil {
-				h.logger.Errorln(err)
-			}
-			return
-		}
-
-		if CheckToken(w, r.URL.Path[11:], h.service, h.logger) {
-			err := api.Send(w, "token exists")
-			if err != nil {
-				h.logger.Errorln(err)
-			}
-		}
-	}, h.logger)(w, r)
+func (h *Handler) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	err := api.SendError(w, http.StatusNotFound, vanerrors.NewSimple(NotFound))
+	if err != nil {
+		h.logger.Errorln(err)
+	}
 }

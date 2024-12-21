@@ -75,7 +75,7 @@ func (a *Application) Run(ctx context.Context) {
 	go server.Run()
 	closer.Add(server.Close)
 
-	logger.Println("application started")
+	logger.Printf("application started on port %d", cfg.Port)
 
 	<-ctx.Done()
 
