@@ -19,8 +19,8 @@ type Logger struct {
 
 var stdPrefixes = [4]string{
 	"^^info>>",
-	"UwU!Warn>>",
-	"Auh:Error>>",
+	"._.!Warn>>",
+	"@_@:Error>>",
 	">_<Fatal>>",
 }
 
