@@ -29,11 +29,11 @@ func New(config string) *Application {
 // Runs the application
 func (a *Application) Run(ctx context.Context) {
 	// Creates logger
-	file, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_APPEND|os.O_RDONLY, 0666)
-	if err != nil {
-		panic(err)
-	}
-	logger := logger.New(file)
+	// file, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_APPEND|os.O_RDONLY, 0666)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	logger := logger.New(os.Stderr)
 
 	// Loading config
 	cfg, err := config.Get(a.Config)

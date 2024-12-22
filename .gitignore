@@ -30,8 +30,3 @@ config.y*ml
 # logs
 logs.txt
 
-# Docker
-DockerFile
-README.Docker.md
-compose.yaml
-.dockerignore

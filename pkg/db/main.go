@@ -13,6 +13,7 @@ import (
 const (
 	ErrorOpeningDataBase = "error opining database"
 	ErrorCreateTable     = "error creating table"
+	CheckingConnection   = "checking database connection failed"
 	// ErrorPreparingQuery  = "error preparing query"
 	ErrorInserting    = "error inserting"
 	ErrorSelecting    = "error selecting"
@@ -28,9 +29,13 @@ type DB struct {
 
 // Creates a new data base connection
 func New(cfg config.DBConfig) (*DB, error) {
-	db, err := sql.Open("postgres", fmt.Sprintf("host=localhost port=%d user=%s password=%s dbname=%s sslmode=disable", cfg.Port, cfg.Username, cfg.Password, cfg.Name))
+	db, err := sql.Open("postgres", fmt.Sprintf("%s://%s:%s@db:%d/%s?sslmode=disable", cfg.Host, cfg.Username, cfg.Password, cfg.Port, cfg.Name))
 	if err != nil {
 		return nil, vanerrors.NewWrap(ErrorOpeningDataBase, err, vanerrors.EmptyHandler)
+	}
+	err = db.Ping()
+	if err != nil {
+		return nil, vanerrors.NewWrap(CheckingConnection, err, vanerrors.EmptyHandler)
 	}
 	return &DB{db: db}, nil
 }

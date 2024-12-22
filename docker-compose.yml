@@ -1,0 +1,19 @@
+version: "0.1"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3700:3700"
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    ports:
+      - "3705:5432"
+    environment:
+      - POSTGRES_USER=appuser
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=logger
+
