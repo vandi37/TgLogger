@@ -106,7 +106,7 @@ func (db *DB) NewToken(token string, id int64) error {
 
 // Checks token existence
 func (db *DB) CheckToken(token string) (bool, error) {
-	query := `select count(*) from tokens where token = $1`
+	query := `select count(1) from tokens where token = $1`
 	rows, err := db.db.Query(query, token)
 	if err != nil {
 		return false, vanerrors.NewWrap(ErrorSelecting, err, vanerrors.EmptyHandler)
