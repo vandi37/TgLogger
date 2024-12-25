@@ -111,6 +111,8 @@ func (db *DB) CheckToken(token string) (bool, error) {
 	if err != nil {
 		return false, vanerrors.NewWrap(ErrorSelecting, err, vanerrors.EmptyHandler)
 	}
+	defer rows.Close()
+	
 	rows.Next()
 
 	var count int64
