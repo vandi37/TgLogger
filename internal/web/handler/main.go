@@ -26,17 +26,15 @@ type Handler struct {
 	bot     *bot.Bot
 }
 
-// Created a new handler
 func New(bot *bot.Bot, service *service.Service, logger *logger.Logger) *Handler {
-	// Creating handler
 	handler := Handler{
 		ServeMux: http.NewServeMux(),
 		service:  service,
 		logger:   logger,
 		bot:      bot,
 	}
-	handler.HandleFunc("/api/send", ContentType(handler.CheckMethod(http.MethodPost, handler.Send)))
-	handler.HandleFunc("/api/check/{id}", ContentType(handler.CheckMethod(http.MethodGet, handler.CheckHandler)))
+	handler.HandleFunc("/api/token{token}/send", ContentType(handler.CheckMethod(http.MethodPost, handler.Send)))
+	handler.HandleFunc("/api/token{token}/check", ContentType(handler.CheckMethod(http.MethodGet, handler.CheckHandler)))
 	handler.HandleFunc("/", ContentType(handler.NotFoundHandler))
 
 	return &handler

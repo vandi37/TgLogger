@@ -13,11 +13,12 @@ type Response struct {
 	Description string `json:"description"`
 }
 
-// A request
 type Request struct {
-	Token string `json:"token"`
-	Id    int64  `json:"id"`
-	Text  string `json:"text"`
+	Id            int64  `json:"id"`
+	Text          string `json:"text"`
+	Mode          string `json:"mode"`
+	Notifications bool   `json:"notifications"`
+	WebPreview    bool   `json:"web-preview"`
 }
 
 // Sends the response

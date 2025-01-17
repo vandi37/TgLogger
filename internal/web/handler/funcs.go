@@ -1,19 +1,17 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/vandi37/TgLogger/internal/web/api"
 	"github.com/vandi37/vanerrors"
 )
 
 const (
-	OkSend          = "successful sending message '%s' to chat %d"
-	OkSendWithToken = OkSend + " from token %s"
-	OkCheck         = "successful token checking, token %s exists"
+	OkSend = "successful sending message '%s' to chat %d"
 )
 
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
@@ -29,13 +27,17 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.CheckToken(w, req.Token) {
+	if !h.CheckToken(w, r) {
 		return
 	}
 
-	err = h.bot.Send(req.Id, req.Text)
+	err = h.bot.SettingSend(req.Id, req.Text, req.Mode, !req.Notifications, !req.WebPreview)
 	if err != nil {
-		err = api.SendError(w, http.StatusInternalServerError, vanerrors.NewWrap(ErrorSendingMessage, err, vanerrors.EmptyHandler))
+		var code = http.StatusBadRequest
+		if tg_err, ok := err.(tgbotapi.Error); ok {
+			code = tg_err.Code
+		}
+		err = api.SendError(w, code, err)
 		if err != nil {
 			h.logger.Errorln(err)
 
@@ -43,15 +45,14 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Printf(OkSendWithToken, req.Text, req.Id, req.Token)
 	err = api.Send(w, fmt.Sprintf(OkSend, req.Text, req.Id))
 	if err != nil {
 		h.logger.Errorln(err)
 	}
 }
 
-func (h *Handler) CheckToken(w http.ResponseWriter, token string) bool {
-	ok, err := h.service.CheckToken(context.TODO(), token)
+func (h *Handler) CheckToken(w http.ResponseWriter, r *http.Request) bool {
+	ok, err := h.service.CheckToken(r.Context(), r.FormValue("token"))
 	if err != nil {
 		err = api.SendError(w, http.StatusInternalServerError, vanerrors.NewWrap(ErrorCheckingToken, err, vanerrors.EmptyHandler))
 		if err != nil {
@@ -64,7 +65,6 @@ func (h *Handler) CheckToken(w http.ResponseWriter, token string) bool {
 		err = api.SendError(w, http.StatusBadRequest, vanerrors.NewSimple(TokenNotFound))
 		if err != nil {
 			h.logger.Errorln(err)
-
 		}
 		return false
 	}
@@ -72,10 +72,7 @@ func (h *Handler) CheckToken(w http.ResponseWriter, token string) bool {
 }
 
 func (h *Handler) CheckHandler(w http.ResponseWriter, r *http.Request) {
-	if h.CheckToken(w, r.FormValue("id")) {
-
-		h.logger.Printf(OkCheck, r.FormValue("id"))
-
+	if h.CheckToken(w, r) {
 		err := api.Send(w, "token exists")
 		if err != nil {
 			h.logger.Errorln(err)

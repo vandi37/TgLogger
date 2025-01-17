@@ -25,6 +25,7 @@ func NewToken(b *bot.Bot, s *service.Service) (bot.Command, string) {
 	return func(ctx context.Context, update tgbotapi.Update) error {
 		id := update.SentFrom().ID
 		token, err := s.AddToken(ctx, id)
+
 		if err != nil {
 			return b.Send(id, fmt.Sprintf("❌ Error creating token: %v", err))
 		}
