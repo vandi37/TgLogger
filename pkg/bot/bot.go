@@ -5,86 +5,90 @@ import (
 	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/vandi37/TgLogger/internal/service"
-	"github.com/vandi37/TgLogger/pkg/commands"
 	"github.com/vandi37/TgLogger/pkg/logger"
+	"github.com/vandi37/TgLogger/pkg/waiting"
 	"github.com/vandi37/vanerrors"
 )
 
-// Errors
 const (
 	ErrorGettingBot = "error getting bot"
 	ContextExit     = "context exit"
 )
 
-type Command func(u *tgbotapi.Update) error
+type Command func(ctx context.Context, update tgbotapi.Update) error
 
-// The telegram bot
 type Bot struct {
-	Bot      *tgbotapi.BotAPI
+	bot      *tgbotapi.BotAPI
 	logger   *logger.Logger
 	mu       sync.Mutex
 	upd      tgbotapi.UpdateConfig
-	service  *service.Service
-	commands commands.Commands
-	// rootHandler *handler.Handler
+	commands map[string]Command
+	Waiter   *waiting.Waiter[int64, tgbotapi.Message]
 }
 
-// Creates a new bot
-func New(token string, service *service.Service, logger *logger.Logger) (*Bot, error) {
-	// New bor api
+func New(token string, logger *logger.Logger) (*Bot, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return nil, vanerrors.NewWrap(ErrorGettingBot, err, vanerrors.EmptyHandler)
 	}
 
-	// Creates an update
 	u := tgbotapi.NewUpdate(60)
 
-	res := Bot{
-		Bot:     bot,
-		logger:  logger,
-		upd:     u,
-		service: service,
-	}
-	res.commands = commands.Commands{
-		"new_token":    res.NewToken,
-		"delete_token": res.DeleTeToken,
-		"my_tokens":    res.MyTokens,
-	}
-
-	return &res, nil
+	return &Bot{
+		bot:      bot,
+		logger:   logger,
+		upd:      u,
+		commands: map[string]Command{},
+		Waiter:   waiting.New[int64, tgbotapi.Message](),
+	}, nil
 }
 
-// Runs the bot
+func (b *Bot) Init(commands map[string]Command) {
+	b.commands = commands
+}
+
 func (b *Bot) Run(ctx context.Context) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// Gets updates
-	updates := b.Bot.GetUpdatesChan(b.upd)
-	updates.Clear()
+	updates := b.bot.GetUpdatesChan(b.upd)
+
+	defer func() {
+		if err := recover(); err != nil {
+			b.logger.Errorf("bot panic: %v", err)
+		}
+	}()
 
 	for {
+
 		select {
 		case <-ctx.Done():
 			return vanerrors.NewSimple(ContextExit)
 		case update := <-updates:
-			if update.Message == nil || !update.Message.IsCommand() {
+
+			if update.Message == nil {
 				continue
 			}
 
-			err := b.service.NewUser(ctx, update.SentFrom().ID)
-			if err != nil {
-				b.logger.Errorln(err)
+			if c, ok := b.commands[update.Message.Command()]; update.Message.IsCommand() && ok {
+				go func() {
+					err := c(ctx, update)
+					if err != nil {
+						b.logger.Errorf("error handling text '%s', user `%d` (%s): %v", update.Message.Text, update.SentFrom().ID, update.SentFrom().FirstName)
+					}
+				}()
 				continue
 			}
 
-			err = b.commands.Run(update)
-			if err != nil {
-				b.logger.Errorln(err)
-				continue
+			if update.Message != nil {
+				b.Waiter.Check(update.SentFrom().ID, *update.Message)
+
 			}
+
 		}
 	}
+}
+
+func (b *Bot) GetUsername() string {
+	return b.bot.Self.UserName
 }

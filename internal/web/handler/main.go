@@ -36,7 +36,7 @@ func New(bot *bot.Bot, service *service.Service, logger *logger.Logger) *Handler
 		bot:      bot,
 	}
 	handler.HandleFunc("/api/send", ContentType(handler.CheckMethod(http.MethodPost, handler.Send)))
-	handler.HandleFunc("/api/check/{x}", ContentType(handler.CheckMethod(http.MethodGet, handler.CheckHandler)))
+	handler.HandleFunc("/api/check/{id}", ContentType(handler.CheckMethod(http.MethodGet, handler.CheckHandler)))
 	handler.HandleFunc("/", ContentType(handler.NotFoundHandler))
 
 	return &handler

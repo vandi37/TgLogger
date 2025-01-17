@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
-	"github.com/vandi37/TgLogger/internal/service"
 	"github.com/vandi37/TgLogger/internal/web/api"
-	"github.com/vandi37/TgLogger/pkg/logger"
 	"github.com/vandi37/vanerrors"
 )
 
@@ -32,7 +29,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !CheckToken(w, req.Token, h.service, h.logger) {
+	if !h.CheckToken(w, req.Token) {
 		return
 	}
 
@@ -53,12 +50,12 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func CheckToken(w http.ResponseWriter, token string, service *service.Service, logger *logger.Logger) bool {
-	ok, err := service.CheckToken(context.TODO(), token)
+func (h *Handler) CheckToken(w http.ResponseWriter, token string) bool {
+	ok, err := h.service.CheckToken(context.TODO(), token)
 	if err != nil {
 		err = api.SendError(w, http.StatusInternalServerError, vanerrors.NewWrap(ErrorCheckingToken, err, vanerrors.EmptyHandler))
 		if err != nil {
-			logger.Errorln(err)
+			h.logger.Errorln(err)
 		}
 		return false
 	}
@@ -66,7 +63,7 @@ func CheckToken(w http.ResponseWriter, token string, service *service.Service, l
 	if !ok {
 		err = api.SendError(w, http.StatusBadRequest, vanerrors.NewSimple(TokenNotFound))
 		if err != nil {
-			logger.Errorln(err)
+			h.logger.Errorln(err)
 
 		}
 		return false
@@ -75,10 +72,9 @@ func CheckToken(w http.ResponseWriter, token string, service *service.Service, l
 }
 
 func (h *Handler) CheckHandler(w http.ResponseWriter, r *http.Request) {
-	var path = strings.Split(r.URL.Path, "/")
-	if CheckToken(w, path[len(path)-1], h.service, h.logger) {
+	if h.CheckToken(w, r.FormValue("id")) {
 
-		h.logger.Printf(OkCheck, path[len(path)-1])
+		h.logger.Printf(OkCheck, r.FormValue("id"))
 
 		err := api.Send(w, "token exists")
 		if err != nil {

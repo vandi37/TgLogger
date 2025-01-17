@@ -25,6 +25,6 @@ func (b *Bot) SettingSend(chat int64, text string, mode string, disable_notifica
 	msg.DisableWebPagePreview = disable_preview
 	msg.ParseMode = mode
 
-	_, err := b.Bot.Send(msg)
+	_, err := b.bot.Send(msg)
 	return err
 }

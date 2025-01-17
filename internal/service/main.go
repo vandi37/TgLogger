@@ -29,7 +29,11 @@ func New(db *db.DB, logger *logger.Logger) *Service {
 }
 
 func (s *Service) NewUser(ctx context.Context, id int64) error {
-	return s.user_repo.NewUser(ctx, id)
+	err := s.user_repo.NewUser(ctx, id)
+	if err != nil {
+		s.logger.Errorln(err)
+	}
+	return err
 }
 
 func (s *Service) AddToken(ctx context.Context, id int64) (string, error) {
@@ -40,12 +44,14 @@ func (s *Service) AddToken(ctx context.Context, id int64) (string, error) {
 		token = tokens.NewToken()
 		exists, err = s.token_repo.Exist(ctx, token)
 		if err != nil {
+			s.logger.Errorln(err)
 			return "", err
 		}
 	}
 
 	err = s.token_repo.New(ctx, token, id)
 	if err != nil {
+		s.logger.Errorln(err)
 		return "", err
 	}
 
@@ -60,6 +66,7 @@ func (s *Service) DeleteToken(ctx context.Context, token string, id int64) error
 
 	ok, err := s.token_repo.Exist(ctx, token)
 	if err != nil {
+		s.logger.Errorln(err)
 		return err
 	}
 	if !ok {
@@ -68,6 +75,7 @@ func (s *Service) DeleteToken(ctx context.Context, token string, id int64) error
 
 	usr, err := s.token_repo.GetOwner(ctx, token)
 	if err != nil {
+		s.logger.Errorln(err)
 		return err
 	}
 	if usr != id {
@@ -79,9 +87,18 @@ func (s *Service) DeleteToken(ctx context.Context, token string, id int64) error
 
 // Gets all tokens of user
 func (s *Service) GetTokens(ctx context.Context, id int64) ([]string, error) {
-	return s.token_repo.Select(ctx, id)
+	err, res := s.token_repo.Select(ctx, id)
+	if err != nil {
+		s.logger.Errorln(err)
+
+	}
+	return err, res
 }
 
 func (s *Service) CheckToken(ctx context.Context, token string) (bool, error) {
-	return s.token_repo.Exist(ctx, token)
+	ok, err := s.token_repo.Exist(ctx, token)
+	if err != nil {
+		s.logger.Errorln(err)
+	}
+	return ok, err
 }

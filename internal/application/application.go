@@ -63,7 +63,7 @@ func (a *Application) Run(ctx context.Context) {
 
 	service := service.New(db, logger)
 
-	bot, err := bot.New(cfg.Token, service, logger)
+	bot, err := bot.New(cfg.Token, logger)
 	if err != nil {
 		logger.Fatalln(err)
 	}
