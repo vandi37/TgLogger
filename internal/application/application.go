@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"os"
 	"time"
@@ -30,13 +29,7 @@ func New(config string) *Application {
 
 // Runs the application
 func (a *Application) Run(ctx context.Context) {
-	// Creates logger
-	file, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-
-	logger := logger.New(io.MultiWriter(file, os.Stderr))
+	logger := logger.New(os.Stderr)
 
 	// Loading config
 	cfg, err := config.Get(a.Config)
