@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/vandi37/TgLogger/internal/commands"
 	"github.com/vandi37/TgLogger/internal/config"
 	"github.com/vandi37/TgLogger/internal/database/db"
 	"github.com/vandi37/TgLogger/internal/service"
@@ -67,6 +68,7 @@ func (a *Application) Run(ctx context.Context) {
 	if err != nil {
 		logger.Fatalln(err)
 	}
+	bot.Init(commands.BuildCommands(bot, service, commands.NewToken, commands.DeleTeToken, commands.MyTokens, commands.Help, commands.Start, commands.Cancel))
 
 	go bot.Run(ctx)
 

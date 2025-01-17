@@ -9,6 +9,18 @@ import (
 	"github.com/vandi37/TgLogger/pkg/bot"
 )
 
+type CommandBuilder func(*bot.Bot, *service.Service) (bot.Command, string)
+
+func BuildCommands(b *bot.Bot, service *service.Service, cmds ...CommandBuilder) map[string]bot.Command {
+	res := map[string]bot.Command{}
+
+	for _, c := range cmds {
+		command, key := c(b, service)
+		res[key] = command
+	}
+	return res
+}
+
 func NewToken(b *bot.Bot, s *service.Service) (bot.Command, string) {
 	return func(ctx context.Context, update tgbotapi.Update) error {
 		id := update.SentFrom().ID
