@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
   db:
-    image: postgres:15
+    image: postgres:latest
     ports:
       - "3705:5432"
     environment:
