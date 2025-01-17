@@ -2,18 +2,19 @@ package application
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/vandi37/TgLogger/config"
+	"github.com/vandi37/TgLogger/internal/config"
+	"github.com/vandi37/TgLogger/internal/database/db"
+	"github.com/vandi37/TgLogger/internal/service"
 	"github.com/vandi37/TgLogger/internal/web/handler"
 	"github.com/vandi37/TgLogger/internal/web/server"
 	"github.com/vandi37/TgLogger/pkg/bot"
 	"github.com/vandi37/TgLogger/pkg/closer"
-	"github.com/vandi37/TgLogger/pkg/db"
 	"github.com/vandi37/TgLogger/pkg/logger"
-	"github.com/vandi37/TgLogger/pkg/service"
 )
 
 // Thr application program
@@ -29,11 +30,12 @@ func New(config string) *Application {
 // Runs the application
 func (a *Application) Run(ctx context.Context) {
 	// Creates logger
-	// file, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_APPEND|os.O_RDONLY, 0666)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	logger := logger.New(os.Stderr)
+	file, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	logger := logger.New(io.MultiWriter(file, os.Stderr))
 
 	// Loading config
 	cfg, err := config.Get(a.Config)

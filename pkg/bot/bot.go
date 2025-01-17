@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/vandi37/TgLogger/internal/service"
 	"github.com/vandi37/TgLogger/pkg/commands"
 	"github.com/vandi37/TgLogger/pkg/logger"
-	"github.com/vandi37/TgLogger/pkg/service"
 	"github.com/vandi37/vanerrors"
 )
 
@@ -74,7 +74,7 @@ func (b *Bot) Run(ctx context.Context) error {
 				continue
 			}
 
-			err := b.service.NewUser(update.SentFrom().ID)
+			err := b.service.NewUser(ctx, update.SentFrom().ID)
 			if err != nil {
 				b.logger.Errorln(err)
 				continue

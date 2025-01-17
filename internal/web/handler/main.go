@@ -3,9 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"github.com/vandi37/TgLogger/internal/service"
 	"github.com/vandi37/TgLogger/pkg/bot"
 	"github.com/vandi37/TgLogger/pkg/logger"
-	"github.com/vandi37/TgLogger/pkg/service"
 )
 
 // Errors

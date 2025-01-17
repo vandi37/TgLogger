@@ -1,14 +1,15 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/vandi37/TgLogger/internal/service"
 	"github.com/vandi37/TgLogger/internal/web/api"
 	"github.com/vandi37/TgLogger/pkg/logger"
-	"github.com/vandi37/TgLogger/pkg/service"
 	"github.com/vandi37/vanerrors"
 )
 
@@ -53,7 +54,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckToken(w http.ResponseWriter, token string, service *service.Service, logger *logger.Logger) bool {
-	ok, err := service.CheckToken(token)
+	ok, err := service.CheckToken(context.TODO(), token)
 	if err != nil {
 		err = api.SendError(w, http.StatusInternalServerError, vanerrors.NewWrap(ErrorCheckingToken, err, vanerrors.EmptyHandler))
 		if err != nil {

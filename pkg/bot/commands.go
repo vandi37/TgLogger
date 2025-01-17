@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -8,7 +9,7 @@ import (
 
 func (b *Bot) NewToken(u tgbotapi.Update) error {
 	id := u.SentFrom().ID
-	token, err := b.service.AddToken(id)
+	token, err := b.service.AddToken(context.TODO(), id)
 	if err != nil {
 		return b.Send(id, fmt.Sprintf("❌ Error creating token: %v", err))
 	}
@@ -18,7 +19,7 @@ func (b *Bot) NewToken(u tgbotapi.Update) error {
 func (b *Bot) DeleTeToken(u tgbotapi.Update) error {
 	id := u.SentFrom().ID
 	value := u.Message.CommandArguments()
-	err := b.service.DeleteToken(value, id)
+	err := b.service.DeleteToken(context.TODO(), value, id)
 	if err != nil {
 		return b.Send(id, fmt.Sprintf("❌ Error deleting token: %v", err))
 	}
@@ -27,7 +28,7 @@ func (b *Bot) DeleTeToken(u tgbotapi.Update) error {
 
 func (b *Bot) MyTokens(u tgbotapi.Update) error {
 	id := u.SentFrom().ID
-	tokens, err := b.service.GetTokens(id)
+	tokens, err := b.service.GetTokens(context.TODO(), id)
 	if err != nil {
 		return b.Send(id, fmt.Sprintf("❌ Error getting tokens: %v", err))
 	}
